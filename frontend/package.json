@@ -1,0 +1,12 @@
+{
+    "name": "pretriage-frontend",
+    "private": true,
+    "version": "0.1.0",
+    "scripts": {
+        "dev": "concurrently \"npm --prefix kiosk-ui run dev\" \"npm --prefix staff-dashboard run dev\"",
+        "build": "npm --prefix kiosk-ui run build ; npm --prefix staff-dashboard run build"
+    },
+    "devDependencies": {
+        "concurrently": "^9.1.2"
+    }
+}

@@ -1,0 +1,154 @@
+{
+    "name": "PreTriage Pipeline",
+    "nodes": [
+        {
+            "parameters": {
+                "path": "intake-webhook",
+                "httpMethod": "POST",
+                "responseMode": "onReceived"
+            },
+            "id": "Webhook_Intake",
+            "name": "Intake Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                200,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://localhost:8000/intake",
+                "method": "POST",
+                "jsonParameters": true,
+                "sendBody": true
+            },
+            "id": "HTTP_Intake",
+            "name": "Call Intake API",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                450,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "return items.map(item => ({ json: { ...item.json, rag_context: ['chunk-1', 'chunk-2', 'chunk-3'] } }));"
+            },
+            "id": "Function_RAG",
+            "name": "Simulate RAG",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 2,
+            "position": [
+                700,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://localhost:8000/triage",
+                "method": "POST",
+                "jsonParameters": true,
+                "sendBody": true
+            },
+            "id": "HTTP_Triage",
+            "name": "Call Triage API",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                950,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "url": "http://localhost:8000/route",
+                "method": "POST",
+                "jsonParameters": true,
+                "sendBody": true
+            },
+            "id": "HTTP_Route",
+            "name": "Call Routing API",
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4,
+            "position": [
+                1200,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "functionCode": "return items.map(item => ({ json: { ...item.json, explanation_generated: true } }));"
+            },
+            "id": "Function_Explanation",
+            "name": "Generate Explanation",
+            "type": "n8n-nodes-base.function",
+            "typeVersion": 2,
+            "position": [
+                1450,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Intake Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Call Intake API",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Call Intake API": {
+            "main": [
+                [
+                    {
+                        "node": "Simulate RAG",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Simulate RAG": {
+            "main": [
+                [
+                    {
+                        "node": "Call Triage API",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Call Triage API": {
+            "main": [
+                [
+                    {
+                        "node": "Call Routing API",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Call Routing API": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Explanation",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {},
+    "versionId": "starter-v1"
+}

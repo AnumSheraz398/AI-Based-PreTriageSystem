@@ -1,0 +1,165 @@
+@import url("https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    color: #0f172a;
+}
+
+.intake-shell {
+    background:
+        radial-gradient(circle at 12% 10%, rgba(16, 185, 129, 0.22) 0%, rgba(16, 185, 129, 0) 36%),
+        radial-gradient(circle at 92% 3%, rgba(30, 64, 175, 0.16) 0%, rgba(30, 64, 175, 0) 36%),
+        linear-gradient(155deg, #f8fffd 0%, #effaf7 45%, #eef3ff 100%);
+}
+
+.intake-panel {
+    border: 1px solid rgba(167, 243, 208, 0.6);
+    background:
+        linear-gradient(165deg, rgba(255, 255, 255, 0.93), rgba(247, 255, 251, 0.84)),
+        linear-gradient(90deg, rgba(236, 253, 245, 0.34), rgba(224, 231, 255, 0.25));
+    box-shadow: 0 22px 50px rgba(17, 24, 39, 0.12);
+    backdrop-filter: blur(7px);
+}
+
+.intake-card {
+    border: 1px solid rgba(167, 243, 208, 0.58);
+    background: linear-gradient(180deg, #ffffff 0%, #f7fffb 100%);
+    box-shadow: 0 12px 28px rgba(5, 46, 22, 0.08);
+}
+
+.intake-title {
+    color: #0f172a;
+}
+
+.locale-en {
+    font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+}
+
+.locale-en .intake-title {
+    font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    font-weight: 800;
+}
+
+.locale-ur {
+    font-family: "Noto Naskh Arabic", "Segoe UI", serif;
+}
+
+.locale-ur .intake-title {
+    font-family: "Noto Nastaliq Urdu", "Noto Naskh Arabic", serif;
+    letter-spacing: 0;
+    line-height: 1.5;
+    font-weight: 700;
+}
+
+.locale-ur p,
+.locale-ur label,
+.locale-ur legend,
+.locale-ur button,
+.locale-ur input,
+.locale-ur textarea,
+.locale-ur select {
+    font-family: "Noto Naskh Arabic", "Segoe UI", serif;
+}
+
+.intake-chip {
+    color: #065f46;
+    background: linear-gradient(120deg, rgba(220, 252, 231, 0.95), rgba(209, 250, 229, 0.92));
+    border: 1px solid rgba(52, 211, 153, 0.42);
+}
+
+.endpoint-pill {
+    color: #065f46;
+    background: linear-gradient(120deg, rgba(236, 253, 245, 0.98), rgba(220, 252, 231, 0.94));
+    border: 1px solid rgba(110, 231, 183, 0.6);
+}
+
+.language-box {
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    background: linear-gradient(145deg, rgba(15, 23, 42, 0.97), rgba(30, 41, 59, 0.95));
+}
+
+.language-label {
+    color: #d1fae5;
+}
+
+.language-select {
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(15, 23, 42, 0.8);
+}
+
+.clinical-input {
+    border-color: #bbf7d0;
+}
+
+.clinical-input:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.18);
+}
+
+.clinical-fieldset {
+    border: 1px solid rgba(134, 239, 172, 0.7);
+    background: linear-gradient(180deg, rgba(240, 253, 244, 0.8), rgba(236, 253, 245, 0.55));
+}
+
+.btn-primary {
+    background: linear-gradient(100deg, #059669, #0d9488);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(100deg, #047857, #0f766e);
+}
+
+.btn-danger {
+    background: linear-gradient(100deg, #dc2626, #e11d48);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(100deg, #b91c1c, #be123c);
+}
+
+.btn-dark {
+    background: linear-gradient(100deg, #1e293b, #0f172a);
+}
+
+.btn-dark:hover {
+    background: linear-gradient(100deg, #0f172a, #020617);
+}
+
+.btn-secondary {
+    background: linear-gradient(100deg, #334155, #1e293b);
+}
+
+.btn-secondary:hover {
+    background: linear-gradient(100deg, #1e293b, #0f172a);
+}
+
+.medical-orb {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 9999px;
+    filter: blur(4px);
+}
+
+.medical-orb-top {
+    top: -5rem;
+    right: -2rem;
+    width: 16rem;
+    height: 16rem;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.28) 0%, rgba(16, 185, 129, 0) 70%);
+}
+
+.medical-orb-bottom {
+    bottom: -5rem;
+    left: -2rem;
+    width: 14rem;
+    height: 14rem;
+    background: radial-gradient(circle, rgba(129, 140, 248, 0.24) 0%, rgba(129, 140, 248, 0) 70%);
+}
