@@ -21,7 +21,7 @@ class ConsentResponse(BaseModel):
     timestamp: str
 
 
-@router.post("/", response_model=ConsentResponse, summary="Record patient consent decision")
+@router.post("", response_model=ConsentResponse, summary="Record patient consent decision")
 async def record_consent(payload: ConsentPayload):
     """
     Record the patient's consent decision and determine processing route.

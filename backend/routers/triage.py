@@ -46,7 +46,7 @@ LEVEL_COLORS = {
 
 
 # ── Endpoint ──────────────────────────────────────────────────────────────────
-@router.post("/", response_model=TriageResponse,
+@router.post("", response_model=TriageResponse,
              summary="Run AI triage on a validated patient intake")
 async def triage(request: TriageRequest):
     """

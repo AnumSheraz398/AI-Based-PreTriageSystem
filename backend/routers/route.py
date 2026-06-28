@@ -46,7 +46,7 @@ LEVEL_COLORS = {
 }
 
 
-@router.post("/", response_model=RouteResponse,
+@router.post("", response_model=RouteResponse,
              summary="Full pipeline: triage + routing + Urdu explanation + save to DB")
 async def route(request: RouteRequest):
     """
