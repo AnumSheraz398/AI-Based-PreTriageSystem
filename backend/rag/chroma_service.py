@@ -26,8 +26,10 @@ EMBEDDING_MODEL = "text-embedding-3-small"   # cheap, fast, good quality
 def _get_client() -> chromadb.PersistentClient:
     """Return a persistent ChromaDB client, creating the directory if needed."""
     CHROMA_DIR.mkdir(exist_ok=True)
-    return chromadb.PersistentClient(path=str(CHROMA_DIR))
-
+    return chromadb.PersistentClient(
+        path=str(CHROMA_DIR),
+        settings=Settings(anonymized_telemetry=False),
+    )
 
 def _get_collection(client: chromadb.PersistentClient):
     """Get or create the triage protocols collection."""

@@ -203,10 +203,13 @@ async def websocket_endpoint(websocket: WebSocket):
     logger.info(f"Dashboard WebSocket connected | total={ws_manager.connection_count}")
 
     # Send current queue immediately on connect
+    # Send current queue immediately on connect
     try:
-        async with websocket.app.state.db_session() as db:
-            patients = await get_active_queue(db)
-            await ws_manager.send_queue_refresh([p.to_dict() for p in patients])
+        from db.models import AsyncSessionLocal
+        if AsyncSessionLocal:
+            async with AsyncSessionLocal() as db:
+                patients = await get_active_queue(db)
+                await ws_manager.send_queue_refresh([p.to_dict() for p in patients])
     except Exception as e:
         logger.warning(f"Could not send initial queue: {e}")
 
