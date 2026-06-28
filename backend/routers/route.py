@@ -1,7 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from typing import Optional
-from models.intake_model import CanonicalIntake
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from models.intake_model import CanonicalIntake, AgeGroup, Sex, Language
 from services.triage_agent import run_triage
 from services.routing import route_patient
 import logging
@@ -11,11 +13,6 @@ logger = logging.getLogger(__name__)
 
 
 class RouteRequest(BaseModel):
-    """
-    Send the CanonicalIntake — this endpoint runs triage + routing in one call.
-    This is what the frontend calls after consent is granted.
-    Single endpoint = simpler frontend integration.
-    """
     canonical: CanonicalIntake
 
 
@@ -43,43 +40,54 @@ class RouteResponse(BaseModel):
     safety_rule_name:    Optional[str]
 
 
+LEVEL_COLORS = {
+    1: "#FF3B3B", 2: "#FF8C00", 3: "#FFD600",
+    4: "#4CAF50", 5: "#90CAF9",
+}
+
+
 @router.post("/", response_model=RouteResponse,
-             summary="Full pipeline: triage + department routing + Urdu explanation")
+             summary="Full pipeline: triage + routing + Urdu explanation + save to DB")
 async def route(request: RouteRequest):
     """
-    The main endpoint the frontend calls after consent is granted.
-
-    Runs the complete pipeline in one call:
-    1. Hard safety rules check
-    2. RAG protocol retrieval
-    3. GPT-4o triage scoring
-    4. Department assignment + token generation
-    5. Urdu + English patient explanation
-
-    **Input:** CanonicalIntake from /intake/validate
-    **Output:** Everything needed for the kiosk result screen
-
-    The frontend should display:
-    - `token_number` — patient's queue number
-    - `level_color` — background color for urgency display
-    - `level_name` + `department_name_ur` — in Urdu for the patient
-    - `patient_message_ur` — main message in Urdu
-    - `location_ur` — where to go in the hospital
-    - `wait_mins` — estimated wait
-    - `escalate_now` — if true, show emergency alert immediately
+    Runs the complete pipeline and saves to database:
+    1. Hard safety rules
+    2. RAG retrieval
+    3. GPT-4o triage
+    4. Department routing + token
+    5. Urdu explanation
+    6. Save to PostgreSQL
+    7. Broadcast to dashboard via WebSocket
     """
-    # Run triage
+    # Step 1-5: triage + routing
     triage_result = await run_triage(request.canonical)
+    route_result  = await route_patient(triage_result)
 
-    # Run routing
-    route_result = await route_patient(triage_result)
+    # Step 6: save to database (non-blocking — don't fail if DB is down)
+    try:
+        from db.models import get_session, AsyncSessionLocal
+        from db.service import save_patient_session
+        from db.websocket_manager import ws_manager
+
+        if AsyncSessionLocal:
+            async with AsyncSessionLocal() as db:
+                patient = await save_patient_session(
+                    db,
+                    route_result  = route_result.__dict__,
+                    triage_result = triage_result.__dict__,
+                    canonical     = request.canonical.__dict__,
+                )
+                # Step 7: broadcast to all connected dashboards
+                await ws_manager.send_new_patient(patient.to_dict())
+    except Exception as e:
+        logger.warning(f"DB save failed (non-critical): {e}")
 
     return RouteResponse(
         session_id         = route_result.session_id,
         token_number       = route_result.token_number,
         level              = route_result.level,
         level_name         = route_result.level_name,
-        level_color        = route_result.level_color,
+        level_color        = LEVEL_COLORS[route_result.level],
         department_code    = route_result.department_code,
         department_name_en = route_result.department_name_en,
         department_name_ur = route_result.department_name_ur,
@@ -107,44 +115,23 @@ async def quick_route(
     duration: str = "2 hours",
     session_id: str = "quick-test",
 ):
-    """
-    Test the full pipeline with just a complaint string.
-    Use this in Swagger UI to see the complete output quickly.
-
-    Example complaints to try:
-    - "severe chest pain and sweating" → Level 2, A&E
-    - "bukhar aur ulti" → Level 3, Emergency OPD
-    - "mild headache" → Level 4-5, General OPD
-    - "snake bite on leg" → Level 1, A&E immediate
-    """
-    from models.intake_model import CanonicalIntake, AgeGroup, Sex, Language
-
     intake = CanonicalIntake(
-        session_id      = session_id,
-        chief_complaint = chief_complaint,
-        age_group       = AgeGroup(age_group),
-        sex             = Sex(sex),
-        duration        = duration,
-        language        = Language.english,
-        consent_given   = True,
+        session_id=session_id, chief_complaint=chief_complaint,
+        age_group=AgeGroup(age_group), sex=Sex(sex),
+        duration=duration, language=Language.english, consent_given=True,
     )
-
     triage_result = await run_triage(intake)
     route_result  = await route_patient(triage_result)
-
     return {
         "token_number":       route_result.token_number,
         "level":              route_result.level,
         "level_name":         route_result.level_name,
-        "level_color":        route_result.level_color,
+        "level_color":        LEVEL_COLORS[route_result.level],
         "department_en":      route_result.department_name_en,
         "department_ur":      route_result.department_name_ur,
         "location_ur":        route_result.location_ur,
         "wait_mins":          route_result.wait_mins,
-        "patient_message_en": route_result.patient_message_en,
         "patient_message_ur": route_result.patient_message_ur,
-        "explanation_ur":     route_result.explanation_ur,
         "escalate_now":       route_result.escalate_now,
         "confidence":         triage_result.confidence,
-        "safety_rule_fired":  triage_result.safety_rule_fired,
     }

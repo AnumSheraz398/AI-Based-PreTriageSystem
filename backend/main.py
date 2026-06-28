@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from pathlib import Path
-from routers import intake, stt, consent, rag, triage, route
+from routers import intake, stt, consent, rag, triage, route, dashboard
 import logging, os
 
 env_path = Path(__file__).parent / ".env"
@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Hospital Pre-Triage AI — Backend API",
-    description="Patient intake, STT, consent, RAG, and triage agent for Pakistani public hospitals.",
-    version="0.3.0",
+    description="AI-powered pre-triage system for Pakistani public hospitals.",
+    version="0.5.0",
     docs_url="/docs", redoc_url="/redoc",
 )
 
@@ -34,12 +34,16 @@ app.include_router(consent.router)
 app.include_router(rag.router)
 app.include_router(triage.router)
 app.include_router(route.router)
+app.include_router(dashboard.router)
 
 
 @app.exception_handler(422)
 async def validation_exception_handler(request: Request, exc):
     errors = exc.errors() if hasattr(exc, "errors") else []
-    readable = [f"{' -> '.join(str(x) for x in e.get('loc',[]))}: {e.get('msg','Invalid')}" for e in errors]
+    readable = [
+        f"{' -> '.join(str(x) for x in e.get('loc',[]))}: {e.get('msg','Invalid')}"
+        for e in errors
+    ]
     return JSONResponse(status_code=422, content={
         "error": "Validation failed", "detail": readable,
         "hint": "Check all required fields are sent with correct types.",
@@ -49,22 +53,35 @@ async def validation_exception_handler(request: Request, exc):
 @app.get("/health", tags=["System"])
 async def health():
     from rag.chroma_service import get_collection_stats
+    from db.models import AsyncSessionLocal
     rag_stats = get_collection_stats()
     return {
-        "status": "ok", "version": "0.3.0",
+        "status":               "ok",
+        "version":              "0.5.0",
         "openai_key_configured": bool(os.getenv("OPENAI_API_KEY")),
-        "rag_ready": rag_stats["is_ready"],
-        "rag_chunks": rag_stats["chunk_count"],
-        "modules": ["intake","stt","consent","rag","triage"],
+        "rag_ready":            rag_stats["is_ready"],
+        "rag_chunks":           rag_stats["chunk_count"],
+        "db_connected":         AsyncSessionLocal is not None,
+        "modules":              ["intake","stt","consent","rag","triage","route","dashboard"],
     }
 
 
 @app.on_event("startup")
 async def startup():
     key_ok = bool(os.getenv("OPENAI_API_KEY"))
-    logger.info("Hospital Pre-Triage API v0.3.0 started")
-    logger.info(f"Env file: {env_path} | exists={env_path.exists()}")
+    logger.info("Hospital Pre-Triage API v0.5.0 started")
     logger.info(f"OpenAI key: {key_ok}")
+
+    # Initialize database
+    try:
+        from db.models import init_db
+        await init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.warning(f"Database init failed (continuing without DB): {e}")
+        logger.warning("Set DATABASE_URL in .env or install PostgreSQL to enable persistence")
+
+    # Auto-ingest RAG protocols
     if key_ok:
         try:
             from rag.chroma_service import get_collection_stats, ingest_protocols
@@ -77,5 +94,6 @@ async def startup():
             else:
                 logger.info(f"RAG ready: {stats['chunk_count']} chunks")
         except Exception as e:
-            logger.warning(f"Auto-ingest failed: {e}")
+            logger.warning(f"RAG auto-ingest failed: {e}")
+
     logger.info("Docs: http://localhost:8000/docs")

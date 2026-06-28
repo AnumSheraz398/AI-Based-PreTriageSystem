@@ -5,6 +5,7 @@ import ResultScreen, {
   NurseQueueScreen,
 } from "./components/ResultScreen";
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
+import DisclaimerBanner from "./components/DisclaimerBanner";
 
 const RED_FLAGS = [
     { key: "chestPain", en: "Chest pain", ur: "سینے میں درد" },
@@ -277,7 +278,10 @@ export default function App() {
             setConsentLoading(false);
         }
     };
-
+    
+    if (screen === "loading") {
+    return <><DisclaimerBanner language={form.language} /><LoadingScreen language={form.language} /></>;
+}
     // ── Screen switcher ────────────────────────────────────────────────────────
     if (screen === "loading") {
         return <LoadingScreen language={form.language} />;
