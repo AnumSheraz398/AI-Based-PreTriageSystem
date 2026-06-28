@@ -24,5 +24,5 @@ async def validate_intake_endpoint(payload: IntakePayload):
     **Note:** Consent is NOT part of this endpoint. Call /consent separately
     after the patient sees the consent screen.
     """
-    print("🔥 Endpoint reached")  # <--- ADD THIS
+    
     return validate_intake(payload)

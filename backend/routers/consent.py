@@ -35,8 +35,6 @@ async def record_consent(payload: ConsentPayload):
 
     The consent decision is timestamped and stored in the audit log.
     """
-    
-    print("🔥 Incoming payload:", payload.model_dump())
 
     timestamp = datetime.now(timezone.utc).isoformat()
 

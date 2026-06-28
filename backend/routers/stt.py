@@ -5,7 +5,6 @@ import uuid
 
 router = APIRouter(prefix="/stt", tags=["Speech to Text"])
 import os
-print("🔑 OPENAI KEY:", os.getenv("OPENAI_API_KEY"))
 
 @router.post("/transcribe", response_model=STTResponse, summary="Convert Urdu/English audio to text")
 async def transcribe(
@@ -24,10 +23,7 @@ async def transcribe(
 
     **Frontend usage:** record audio → POST here → put transcript in chief_complaint field
     """
-    print("🔥 STT endpoint hit")
-    print("📁 File:", audio.filename)
-    print("🆔 Session:", session_id)
-    print("🌐 Language:", language)
+    
     if language not in ("ur", "en"):
         raise HTTPException(status_code=400, detail="Language must be 'ur' or 'en'")
 
